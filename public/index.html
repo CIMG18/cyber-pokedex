@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyber Pokédex • Ultra Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Fondo animado -->
+  <div class="cyber-bg"></div>
+  <div class="pokeball-watermark"></div>
+
+  <!-- Header -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="pokeball-orb"></div>
+      <div>
+        <h1>CYBER<span class="neon-text">POKÉDEX</span></h1>
+        <p class="subtitle">SISTEMA NACIONAL DE DATOS • GEN I & II</p>
+      </div>
+    </div>
+    
+    <div class="nav-actions">
+      <div class="stat-pill">
+        <span class="pulse-dot"></span>
+        <span id="pokemon-count">0 POKÉMONS</span>
+      </div>
+      <button class="btn btn-primary" id="btn-open-create">
+        <span class="btn-icon">＋</span> Registrar Pokémon
+      </button>
+      <button class="btn btn-outline" id="btn-reset" title="Restaurar los 100 originales de PokeAPI">
+        ↺ Sincronizar
+      </button>
+    </div>
+  </header>
+
+  <!-- Barra de Filtros y Búsqueda -->
+  <main class="container">
+    <section class="controls-panel">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Buscar por nombre o número (Ej: pikachu, 25)..." autocomplete="off">
+        <button id="search-clear" class="clear-btn" style="display:none;">✕</button>
+      </div>
+
+      <div class="sort-box">
+        <label for="sort-select">Ordenar por:</label>
+        <select id="sort-select">
+          <option value="id">N° Pokédex (Menor a Mayor)</option>
+          <option value="name">Nombre (A - Z)</option>
+          <option value="attack">Mayor Ataque</option>
+          <option value="hp">Mayor Puntos de Vida (HP)</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Chips de Tipos -->
+    <section class="type-filter-bar" id="type-chips">
+      <!-- Se generan dinámicamente con JS -->
+    </section>
+
+    <!-- Grid de Pokémons -->
+    <section class="pokemon-grid" id="pokemon-grid">
+      <!-- Tarjetas insertadas dinámicamente -->
+    </section>
+    
+    <div id="empty-state" class="empty-state" style="display:none;">
+      <div class="empty-icon">⚡</div>
+      <h3>No se encontraron especímenes</h3>
+      <p>Intenta con otro término de búsqueda o limpia los filtros.</p>
+    </div>
+  </main>
+
+  <!-- MODAL: DETALLES DEL POKÉMON -->
+  <div class="modal-backdrop" id="detail-modal">
+    <div class="modal-card">
+      <button class="modal-close" id="detail-close">&times;</button>
+      <div class="detail-layout">
+        <div class="detail-art-box">
+          <div class="detail-circle" id="detail-circle"></div>
+          <img id="detail-image" src="" alt="Pokemon Art" class="detail-img">
+          <button id="btn-play-cry" class="cry-btn" title="Reproducir Grito">🔊 Reproducir Cry</button>
+        </div>
+        <div class="detail-info">
+          <div class="detail-header">
+            <span class="detail-id" id="detail-id">#000</span>
+            <h2 class="detail-name" id="detail-name">NOMBRE</h2>
+          </div>
+          <div class="detail-types" id="detail-types"></div>
+
+          <div class="detail-physique">
+            <div class="physique-item">
+              <span class="p-label">ALTURA</span>
+              <span class="p-val" id="detail-height">0.0 m</span>
+            </div>
+            <div class="physique-item">
+              <span class="p-label">PESO</span>
+              <span class="p-val" id="detail-weight">0.0 kg</span>
+            </div>
+          </div>
+
+          <div class="detail-stats">
+            <h3>ESTADÍSTICAS BASE</h3>
+            <div class="stat-row">
+              <span>HP</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill hp" id="stat-hp"></div></div>
+              <span id="stat-hp-val">0</span>
+            </div>
+            <div class="stat-row">
+              <span>ATAQUE</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill atk" id="stat-atk"></div></div>
+              <span id="stat-atk-val">0</span>
+            </div>
+            <div class="stat-row">
+              <span>DEFENSA</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill def" id="stat-def"></div></div>
+              <span id="stat-def-val">0</span>
+            </div>
+            <div class="stat-row">
+              <span>VELOCIDAD</span>
+              <div class="stat-bar-track"><div class="stat-bar-fill spd" id="stat-spd"></div></div>
+              <span id="stat-spd-val">0</span>
+            </div>
+          </div>
+
+          <div class="detail-actions">
+            <button class="btn btn-secondary" id="btn-edit-current">Editar Datos</button>
+            <button class="btn btn-danger" id="btn-delete-current">Liberar Pokémon</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CREAR / EDITAR POKÉMON -->
+  <div class="modal-backdrop" id="form-modal">
+    <div class="modal-card form-card">
+      <button class="modal-close" id="form-close">&times;</button>
+      <h2 id="form-title" class="form-title">REGISTRAR NUEVO ESPECIMEN</h2>
+      
+      <form id="pokemon-form">
+        <input type="hidden" id="form-id">
+        
+        <div class="form-grid">
+          <!-- Columna Inputs -->
+          <div class="form-col">
+            <div class="form-group">
+              <label for="form-name">Nombre del Pokémon *</label>
+              <input type="text" id="form-name" required placeholder="Ej: Dragonite">
+            </div>
+
+            <div class="form-group">
+              <label for="form-image">URL de la Ilustración (PNG transparente) *</label>
+              <input type="url" id="form-image" required placeholder="https://raw.githubusercontent.com/.../149.png">
+            </div>
+
+            <div class="form-group">
+              <label>Tipos (Selecciona 1 o 2)</label>
+              <div class="types-selector" id="form-types-picker">
+                <!-- Se llenan con JS -->
+              </div>
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="form-height">Altura (m)</label>
+                <input type="number" step="0.1" id="form-height" value="1.0" min="0.1">
+              </div>
+              <div class="form-group">
+                <label for="form-weight">Peso (kg)</label>
+                <input type="number" step="0.1" id="form-weight" value="15.0" min="0.1">
+              </div>
+            </div>
+          </div>
+
+          <!-- Columna Sliders de Stats y Preview -->
+          <div class="form-col">
+            <div class="preview-box">
+              <span class="preview-label">VISTA PREVIA</span>
+              <img id="form-preview-img" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png" alt="Preview">
+              <h4 id="form-preview-name">Pikachu</h4>
+            </div>
+
+            <div class="stats-sliders">
+              <div class="slider-group">
+                <div class="slider-labels"><span>HP:</span><b id="val-hp">60</b></div>
+                <input type="range" id="slider-hp" min="10" max="250" value="60">
+              </div>
+              <div class="slider-group">
+                <div class="slider-labels"><span>Ataque:</span><b id="val-atk">70</b></div>
+                <input type="range" id="slider-atk" min="10" max="250" value="70">
+              </div>
+              <div class="slider-group">
+                <div class="slider-labels"><span>Defensa:</span><b id="val-def">50</b></div>
+                <input type="range" id="slider-def" min="10" max="250" value="50">
+              </div>
+              <div class="slider-group">
+                <div class="slider-labels"><span>Velocidad:</span><b id="val-spd">90</b></div>
+                <input type="range" id="slider-spd" min="10" max="250" value="90">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-outline" id="form-cancel">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="form-submit">Guardar en Base de Datos</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast de Notificaciones -->
+  <div id="toast" class="toast">Operación exitosa</div>
+
+  <script src="app.js"></script>
+</body>
+</html>
